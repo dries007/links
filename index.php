@@ -14,13 +14,14 @@
 
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/custom.css" rel="stylesheet">
-    <title>Dries007's Private URL-shortener</title>
+    <title>links</title>
 </head>
 <body>
 
 <div class="container">
-    <h1 class="m-t-1">Dries007's Private URL-shortener</h1>
-    <p class="lead">This is (probably) not the page you are looking for!</p>
+    <h1 class="m-t-1">links <small class="text-muted pull-xs-right">a private URL-shortener</small></h1>
+    <p class="lead"></p>
+    <h4>This is (probably) not the page you are looking for!</h4>
     <?php if ($DEBUG) echo '<div class="alert alert-danger" role="alert"><strong>Danger!</strong> Debug is enabled</div>'?>
     <p>If you see this page, there is a good chance something has gone wrong. Try your link again!<br>
         It should have this format: <code><?php echo $LINK_PREFIX; for ($i = 0; $i < $ID_SIZE; $i++) echo $i % 10; ?></code></p>
