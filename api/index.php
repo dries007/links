@@ -14,12 +14,12 @@
 
     <link href="/css/bootstrap.min.css" rel="stylesheet">
     <link href="/css/custom.css" rel="stylesheet">
-    <title>API</title>
+    <title>links API</title>
 </head>
 <body>
 
 <div class="container">
-    <h1 class="m-t-1">Dries007's Private URL-shortener <span class="label label-info">API</span></h1>
+    <h1 class="m-t-1">links <span class="label label-info pull-xs-right">API</span></h1>
     <?php if ($DEBUG) echo '<div class="alert alert-danger" role="alert"><strong>Danger!</strong> Debug is enabled</div>'?>
     <p>Remember that this service is not public. If you want an API key ask me.</p>
     <ul>
