@@ -3,7 +3,7 @@ A simple homebrew private URL shortener
 
 Deployed at [l.dries007.net](//l.dries007.net)
 
-Yes, yes, I know PHP. It works for what I need and I know it well enough. It's also easy to setup.
+Yes, yes, I know, PHP. It works for what I need and I know it well enough. It's also easy to setup.
 
 If you find leaks, please do tell!
 
