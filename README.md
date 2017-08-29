@@ -13,6 +13,18 @@ A simple as possible link shortener/tracker, meant for easy web-service integrat
 + Bootstrap 4
 + FontAwesome 4
 
+Activate the venv & load the env vars:
+```bash
+source .venv/bin/activate
+export $(cat *.env | grep "^[^#;]" | xargs)
+```
+
+First time use:
++ `python -m links db init`
++ Add `import sqlalchemy_utils` and `from sqlalchemy import Text` to `migrations/script.py.mako`
++ `python -m links db migrate`
++ `python -m links db upgrade`
+
 Licence
 -------
 
