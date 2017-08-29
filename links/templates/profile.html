@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block title %}Profile{% endblock %}
+{% macro item(key, value) %}
+  <dt class="col-sm-1 text-right">{{ key }}</dt><dd class="col-sm-11">{{ value }}</dd>
+{% endmacro %}
+{% block content %}
+  <h1>Profile{% if current_user != user %} <small class="text-muted">{{ user.name }}</small>{% endif %}</h1>
+  <dl class="row">
+    {% if current_user.admin %}
+      {{ item('ID', user.id) }}
+    {% endif %}
+    {% if current_user == user or current_user.admin %}
+      {{ item('Email', user.email) }}
+    {% endif %}
+    {{ item('Name', user.name) }}
+    {{ item('Active', fa_b(user.active)) }}
+    {{ item('Admin', fa_b(user.admin)) }}
+  </dl>
+  {% if current_user == user %}
+    <p><a href="{{ url_for('edit_profile') }}" class="btn btn-outline-secondary">Edit Profile ...</a></p>
+    <p><a href="{{ url_for('change_password') }}" class="btn btn-outline-secondary">Change password ...</a></p>
+  {% endif %}
+{% endblock %}

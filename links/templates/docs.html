@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}Documentation{% endblock %}
+{% block content %}
+  {{ super() }}
+  <p>This page contains a list of all API functions.<br />
+    All API functions accept and return only JSON unless otherwise specified in the documentation.</p>
+  {% for name, url, doc in rules %}
+    <h2>{{ name }}</h2>
+    <p>URL endpoint: <code>{{ url }}</code></p>
+    <pre>{{ doc|dedent }}</pre>
+  {% endfor %}
+{% endblock %}

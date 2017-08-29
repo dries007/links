@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Token <small>{{ token.identity }} {% if not token.active %}<span class="badge badge-danger">Inactive</span>{% endif %}</small>{% endblock %}
+{% block content %}
+  {{ super() }}
+  <p>You can use the tokens to access the API functions (<a href="{{ url_for('doc_api') }}">docs here</a>). They should be protected like passwords.<br />
+    Inactive tokens can not be used via the API, but all links still work.</p>
+  <p><button class="btn btn-outline-danger btn-sm show-token" data-token="{{ token.id }}">Show token</button></p>
+  <h2>Add a new link</h2>
+  <form class="form-inline" method="post">
+    {{ form.hidden_tag() }}
+    {{ form.url(class='form-control mb-2 mr-sm-2 mb-sm-0' + (' is-invalid' if form.url.errors else ''), placeholder='URL') }}
+    {{ form.submit(class='btn btn-primary') }}
+  </form>
+  <p>The id will be generated one you submit the form.</p>
+  <h2>Link list</h2>
+  <table class="table table-striped table-sm">
+  <thead><tr>
+    <th>ID</th>
+    <th>Active</th>
+    <th>Link</th>
+    <th>Control</th>
+  </tr></thead>
+  <tbody>
+    {% for b in [true, false] %}
+      {% for link in token.links|selectattr('active', 'equalto', b) %}
+        <tr data-link="{{ link.id }}" data-active="{{ link.active|tojson }}">
+          <td><a href="{{ url_for('redirect_url', id=link.id) }}">{{ link.id }}</a></td>
+          <td><button type="button" class="btn btn-sm btn-secondary toggle-token" title="{{ 'Activate' if not link.active else 'De-activate' }}">{{ fa_b(link.active, 'fa-fw') }}</button></td>
+          <td><a href="{{ link.url }}">{{ link.url }}</a></td>
+          <td><button type="button" class="btn btn-sm btn-danger" data-toggle="modal" data-target="#modal" data-action="delete">Delete</button></td>
+        </tr>
+      {% endfor %}
+    {% endfor %}
+  </tbody>
+  </table>
+
+  <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLabel"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="text"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary dismiss" data-dismiss="modal">No</button>
+          <button type="button" class="btn btn-primary confirm">Yes</button>
+       </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+{% block script %}
+  {{ super() }}
+  <script>
+    "use strict";
+
+    $('.show-token').click(function (ignored) {
+        $(this).replaceWith('<code>' + $(this).data('token') + '</code>');
+    });
+    $('.toggle-token').click(function (ignored) {
+        var link = $(this).parents('tr').data('link');
+        var active = $(this).parents('tr').data('active');
+        postJson(Flask.url_for('api_link', {token_id: '{{token.id}}', link_id: link}), {active: !active}, reloadAsGet);
+    });
+    $('#modal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var link = $(button).parents('tr').data('link');
+        var modal = $(this);
+        modal.find('.modal-title').text('Delete link');
+        modal.find('.text').text('Warning: The link will be permanently deleted!');
+        modal.find('.confirm').click(function () {
+            $.ajax({
+                type: "DELETE",
+                url: Flask.url_for('api_link', {token_id: '{{token.id}}', link_id: link}),
+                success: reloadAsGet
+            });
+        })
+    })
+  </script>
+{% endblock %}

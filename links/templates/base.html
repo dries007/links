@@ -1,0 +1,160 @@
+{% macro fa(ico, class='') %}<i class="fa fa-{{ ico }} {{ class }}"></i>{% endmacro %}
+{% macro fa_b(b, class='') %}{{ fa('check' if b else 'times', class) }}{% endmacro %}
+{% macro form_element(obj) -%}
+  <div class="form-group row">
+    {{ obj.label(class='col-sm-2 col-form-label') }}
+    <div class="col-sm-10">
+      {{ obj(class='form-control is-invalid' if obj.errors else 'form-control', required=obj.flags.required) }}
+      {%- if obj.errors -%}
+        {%- for error in obj.errors -%}
+          <div class="invalid-feedback">{{ error }}</div>
+        {%- endfor -%}
+      {%- endif -%}
+    </div>
+  </div>
+{%- endmacro %}
+{% macro form_submit(obj) -%}
+  <div class="form-group row">
+    <div class="offset-sm-2 col-sm-10">
+      {{ obj(class='btn btn-primary') }}
+    </div>
+  </div>
+{%- endmacro %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta http-equiv="x-ua-compatible" content="ie=edge">
+  <meta name="generator" content="links (c) 2017 Dries007">
+
+  <title>{% block title %}{% endblock %} | &lt;links /&gt;</title>
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/css/bootstrap.min.css" integrity="sha256-m/h/cUDAhf6/iBRixTbuc8+Rg2cIETQtPcH9D3p2Kg0=" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.css" integrity="sha256-NuCn4IvuZXdBaFKJOAcsU2Q3ZpwbdFisd5dux4jkQ5w=" crossorigin="anonymous" />
+  {% block head %}<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">{% endblock %}
+  {{ JSGlue.include() }}
+</head>
+<body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.js" integrity="sha256-DZAnKJ/6XZ9si04Hgrsxu/8s717jcIzLy3oi35EouyE=" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.11.0/umd/popper.min.js" integrity="sha384-b/U6ypiBEHpOf/4+1nzFpr53nxSS+GLCkfwBdFNTxtclqqenISfwAzpKaMNFNmj4" crossorigin="anonymous"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-beta/js/bootstrap.min.js" integrity="sha256-DiWJXXyq81WlPRnDfGmgYZj2aOVCKyEdJ1l+2TmDuAs=" crossorigin="anonymous"></script>ript>
+
+  <!-- Fixed navbar -->
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="{{ url_for('index') }}">&lt;links /&gt;</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbar">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('index') }}">Home</a></li>
+          <li class="nav-item"><a class="nav-link" href="{{ url_for('doc_api') }}">Documentation</a></li>
+            {% if not current_user.is_anonymous %}
+              <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="{{ url_for('manage_tokens') }}" data-toggle="dropdown">Tokens</a>
+                <div class="dropdown-menu" aria-labelledby="navbarDropdownMenuLink">
+                  <a class="dropdown-item" href="{{ url_for('manage_tokens') }}">Manage Tokens</a>
+                  {% for b in [true, false] %}
+                    <div class="dropdown-divider"></div>
+                    <h6 class="dropdown-header">{{ 'Active' if b else 'Inactive' }}</h6>
+                    {% for token in current_user.tokens|selectattr('active', 'equalto', b) %}
+                      <a class="dropdown-item" href="{{ url_for('token', token=token.identity) }}">{{ token.identity }}</a>
+                    {% endfor %}
+
+                  {% endfor %}
+                </div>
+              </li>
+            {% endif %}
+          </ul>
+          <ul class="navbar-nav mt-2 mt-md-0">
+            {% if current_user.is_anonymous %}
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('login', next=request.path) }}">Login</a></li>
+            {% else %}
+              {% if current_user.admin %}
+                <li class="nav-item"><a class="nav-link" href="{{ url_for('admin') }}">Admin</a></li>
+              {% endif %}
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('profile') }}">{{ current_user.name }}</a></li>
+              <li class="nav-item"><a class="nav-link" href="{{ url_for('logout') }}">Logout</a></li>
+            {% endif %}
+          </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Begin page content -->
+  <div class="container">
+    {% block messages %}
+      {% with messages = get_flashed_messages(with_categories=True) %}
+      {% if messages %}
+      <div class="messages">
+      {% for cat, message in messages %}
+        <div class="alert alert-{{ cat if cat in ['primary', 'secondary', 'success', 'info', 'warning', 'danger'] else 'secondary' }} alert-dismissible fade show" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+          {{ message }}
+        </div>
+      {% endfor %}
+      </div>
+      {% endif %}
+      {% endwith %}
+    {% endblock %}
+    {% block content %}
+      <h1>{{ self.title() }}</h1>
+    {% endblock %}
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="container">
+      <span class="text-muted">&copy; <a class="hide" href="https://dries007.net">Dries007</a> - <a href="{{ url_for('terms') }}" class="hide">About - Terms &amp; Conditions</a></span>
+    </div>
+  </footer>
+
+  {% block script %}<script>
+    "use strict";
+
+    function reloadAsGet()
+    {
+        var loc = window.location;
+        window.location = loc.protocol + '//' + loc.host + loc.pathname + loc.search;
+    }
+
+    function postJson(url, data, success, error)
+    {
+      $.ajax({
+          type: "POST",
+          contentType: "application/json; charset=utf-8",
+          url: url,
+          data: JSON.stringify(data),
+          success: success,
+          error: error,
+          dataType: "json"
+        });
+    }
+
+    $(function ()
+    {
+        $('#navbar').find('.navbar-nav a').each(function (i, e)
+        {
+            if (e.href != window.location.href) return;
+            $(e).addClass("active").parents(".nav-item").addClass("active");
+        });
+    });
+  </script>{% endblock %}
+  <script>
+      console.log(
+          " _______  _______  _______  _______ \n"+
+          "|       ||       ||       ||       |\n"+
+          "|  _____||_     _||   _   ||    _  |\n"+
+          "| |_____   |   |  |  | |  ||   |_| |\n"+
+          "|_____  |  |   |  |  |_|  ||    ___|\n"+
+          " _____| |  |   |  |       ||   |    \n"+
+          "|_______|  |___|  |_______||___|    \n"+
+          "NO. You can't unlock special features by using this. There are no hacks here.\n"+
+          "This is a developers only feature. Anyone who tels you to put anything in here is trying to steal from you.\n" +
+          "Copyright (c) 2017 - Dries007.net - Source on Github: https://github.com/dries007/Links"
+      );
+  </script>
+</body>
+</html>

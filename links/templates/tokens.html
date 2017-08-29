@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+{% block title %}Tokens{% endblock %}
+{% block content %}
+  {{ super() }}
+  <p>You can use the tokens to access the API functions (<a href="{{ url_for('doc_api') }}">docs here</a>). They should be protected like passwords.<br />
+    Inactive tokens can not be used via the API, but all links still work.<br />
+    Deleting is permanent, all links will also be removed.</p>
+  <h2>Add a new token</h2>
+  <form class="form-inline" method="post">
+    {{ form.hidden_tag() }}
+    {{ form.identity(class='form-control mb-2 mr-sm-2 mb-sm-0' + (' is-invalid' if form.identity.errors else ''), placeholder='Identity') }}
+    {{ form.submit(class='btn btn-primary') }}
+  </form>
+  <p>The token itself will be generated one you submit the form.</p>
+  <h2>Token list</h2>
+  <table class="table table-striped table-sm">
+  <thead><tr>
+    <th>Identity</th>
+    <th>Token</th>
+    <th>Active</th>
+    <th>All Links</th>
+    <th>Active Links</th>
+    <th>Control</th>
+  </tr></thead>
+  <tbody>
+  {% for b in [true, false] %}
+    {% for token in current_user.tokens|selectattr('active', 'equalto', b) %}
+      <tr data-token="{{ token.id }}" data-identity="{{ token.identity }}" data-active="{{ token.active|tojson }}">
+        <td><a href="{{ url_for('token', token=token.identity) }}">{{ token.identity }}</a></td>
+        <td><button type="button" class="btn btn-sm btn-info show-token">Show token</button></td>
+        <td><button type="button" class="btn btn-sm btn-{{ 'success' if token.active else 'danger' }} toggle-token" title="{{ 'Activate' if not token.active else 'De-activate' }}">{{ fa_b(token.active, 'fa-fw') }}</button></td>
+        <td>{{ token.links.all()|count }}</td>
+        <td>{{ token.links.filter_by(active=True).all()|count }}</td>
+        <td><div class="btn-group btn-group-sm" role="group">
+          <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#modal" data-action="rename">Change Identity</button>
+          <button type="button" class="btn btn-warning" data-toggle="modal" data-target="#modal" data-action="reset">Reset Token</button>
+          <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#modal" data-action="delete">Delete</button>
+        </div></td>
+      </tr>
+    {% endfor %}
+  {% endfor %}
+  </tbody>
+  </table>
+
+  <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="modalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="modalLabel"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p class="text"></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary dismiss" data-dismiss="modal">No</button>
+          <button type="button" class="btn btn-primary confirm">Yes</button>
+       </div>
+      </div>
+    </div>
+  </div>
+
+{% endblock %}
+{% block script %}
+  {{ super() }}
+  <script>
+    "use strict";
+
+    $('.show-token').click(function (ignored) {
+        $(this).replaceWith('<code>' + $(this).parents('tr').data('token') + '</code>');
+    });
+    $('.toggle-token').click(function (ignored) {
+        var token = $(this).parents('tr').data('token');
+        var active = $(this).parents('tr').data('active');
+        postJson(Flask.url_for('api_token', {token: token}), {active: !active}, reloadAsGet);
+    });
+    $('#modal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget);
+        var token = $(button).parents('tr').data('token');
+        var identity = $(button).parents('tr').data('identity');
+        var modal = $(this);
+        var action = button.data('action');
+        modal.find('.confirm').off('click');
+        if (action === 'rename') {
+            modal.find('.modal-title').text('Rename Token');
+            modal.find('.modal-body').empty().append('<label for="rename">New Identity:</label><input id="rename" type="text" class="form-control" placeholder="Identity" value="VALUE">'.replace('VALUE', identity));
+            modal.find('.confirm').click(function () {
+                var identity = modal.find('.modal-body input').val();
+                postJson(Flask.url_for('api_token', {token_id: token}), {identity: identity}, reloadAsGet, function () {
+                    modal.find('.modal-body input').addClass('is-invalid');
+                    modal.find('.invalid-feedback').remove();
+                    modal.find('.modal-body').append('<div class="invalid-feedback">Token name used or invalid.</div>');
+                });
+            })
+        } else if (action === 'reset') {
+            modal.find('.modal-title').text('Token Reset');
+            modal.find('.modal-body').empty().append('<p class="text">Warning: After a reset you will have to update all applications using this token! Are you sure?</p>');
+            modal.find('.confirm').click(function () {
+                postJson(Flask.url_for('api_token', {token_id: token}), {id: null}, function (data) {
+                    modal.find('.text').text('New token: ').append('<code>' + data['id'] + '</code>');
+                    modal.find('.confirm').hide();
+                    modal.find('.dismiss').text('Done').click(reloadAsGet);
+                });
+            })
+        } else if (action === 'delete') {
+            modal.find('.modal-title').text('Delete Token');
+            modal.find('.modal-body').empty().append('<p>Warning: All links made with this token will be permanently deleted!</p>');
+            modal.find('.confirm').click(function () {
+                $.ajax({
+                    type: "DELETE",
+                    url: Flask.url_for('api_token', {token_id: token}),
+                    success: reloadAsGet
+                });
+            })
+        }
+    })
+  </script>
+{% endblock %}

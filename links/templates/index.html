@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}Welcome{% endblock %}
+{% block content %}
+  {{ super() }}
+  <p>This is a (private) URL shortener, with extra features including:</p>
+  <ul>
+    <li>Dynamic links</li>
+    <li>Generating QR codes</li>
+  </ul>
+  <p>If you'd like an account to use this service, please message me.</p>
+{% endblock %}
