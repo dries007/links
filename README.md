@@ -1,4 +1,4 @@
-<links />
+&lt;links /&gt;
 =========
 
 A simple as possible link shortener/tracker, meant for easy web-service integration.
